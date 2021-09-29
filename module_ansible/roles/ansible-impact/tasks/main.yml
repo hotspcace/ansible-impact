@@ -1,0 +1,336 @@
+---
+
+###########################################################
+# Set remote hostname to ansible_hostname in play
+###########################################################
+#- name: Use hostnamectl to set static hostname
+#  shell: "hostnamectl set-hostname {{fqdn}} --static"
+#  become: true
+#
+#- name: Get hostname from this device
+#  shell: "hostname -f"
+#  args:
+#    executable: /bin/bash
+#  register: myhost
+#
+#- name: Debug myhost
+#  debug: var=myhost.stdout
+###########################################################
+
+###########################################################
+# Create Impact admin account
+###########################################################
+- group:
+    name: ncoadmin
+    gid: 5500
+    state: present
+
+- user:
+    name: root
+    comment: "Add root user to ncoadmin group"
+    group: ncoadmin
+    append: yes
+  become: true
+
+- user:
+    name: netcool
+    comment: "Omnibus admin account"
+    uid: 10001
+    shell: /bin/bash
+    home: /home/netcool
+    group: ncoadmin
+    append: yes
+    password: "$6$ulGOJh6254sgt8QS$C/XftgH.MkMor2X.GbZLIlsfSHKRkHjqAANtiV0zlARH2R7m2.Kis.DICdm.45A7ntp0ImCndPutANY68.PSA/"
+  become: true
+###########################################################
+
+##########################################################
+# Create Directories for mount points
+##########################################################
+- name: create directories
+  file:
+    path: /opt/IBM
+    state: directory
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+    recurse: yes
+
+- name: create directories
+  file:
+    path: /opt/accuoss/repository
+    state: directory
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+    recurse: yes
+
+- name: create scripts directory
+  file:
+    path: /opt/accuoss/omnibus/scripts
+    state: directory
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+
+- name: create host config directory for objectserver
+  file:
+    path: /opt/accuoss/omnibus/configs/objectserver
+    state: directory
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+
+- name: create install directory for Impact 
+  file:
+    path: /tmp/impactinstall
+    state: directory
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+###########################################################
+
+###########################################################
+# Add Hosts entries
+###########################################################
+#- name: Add IP address of all hosts to all hosts
+#  lineinfile:
+#    dest: /etc/hosts
+#    line: "{{ hostvars[item].ansible_host }} {{ hostvars[item].inventory_hostname }} {{ hostvars[item].inventory_hostname_short }}"
+#    state: present
+#  with_items: "{{ groups.all }}"
+###########################################################
+
+#########################################################
+## Copy Files to remote server
+##########################################################
+- name: copy objectserver install response file
+  copy:
+    src: segra_silentInstall_response_wo_defs.xml 
+    dest: /tmp/impactadmin
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+    force: yes
+
+- name: copy
+  copy:
+    src: get_objsrv_props.sql
+    dest: /opt/accuoss/omnibus/configs/objectserver
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+    force: yes
+
+- name: copy scripts to script directory
+  copy:
+    src: mkbk.sh
+    dest: /opt/accuoss/omnibus/scripts
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+    force: yes
+
+- name: copy scripts to script directory
+  copy:
+    src: bkp_hist.sh
+    dest: /opt/accuoss/omnibus/scripts/
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+    force: yes
+######################################################
+
+######################################################
+# Install need yum packages
+######################################################
+- name: Install yum packages using a list
+  yum:
+    name:
+      - tar
+      - hostname
+      - unzip
+      - audit-libs
+      - fontconfig
+      - freetype
+      - compat-libstdc++-33.i686
+      - glibc.i686
+      - gtk2
+      - libICE
+      - libSM
+      - libX11
+      - libXau
+      - libXcursor
+      - libXext
+      - libXft
+      - libXmu
+      - libXp
+      - libXpm
+      - libXrender
+      - libXt
+      - libXtst
+      - libstdc++.i686
+      - libgcc.i686
+      - libjpeg-turbo
+      - libpng12
+      - motif
+      - dejavu-fonts-common
+      - dejavu-sans-fonts
+      - expat
+      - glibc
+      - libgcc
+      - libidn
+      - libstdc++
+      - libuuid
+      - libxcb
+      - nss-softokn-freebl
+      - pam
+      - zlib
+      - nss-softokn-freebl.i686
+      - compat-libstdc++-33
+      - git
+      - logrotate
+      - strace
+      - vim
+      - bc
+      - pam.i686
+      - xorg-x11-xauth.x86_64
+      - xorg-x11-apps-7.7-7.el7.x86_64
+      - xterm
+      - net-tools
+############################################################
+
+############################################################
+- name: Set Impact Server Prompt
+  shell: "export PS1=\"\\[\\033[36m\\]\\u\\[\\033[31m\\]@\\[\\033[02;32m\\]\\H: \\[\\033[33m\\]\\w\\[\\033[0m\\]\\$\""
+  args:
+    executable: /bin/bash
+############################################################
+
+############################################################
+# Installation Manager Install 
+############################################################
+#- stat: path=/home/netcool/IBM/eclipse/tools
+#  register: install_manager_path
+#
+#- debug: msg="The install manager is not installed so it will be installed now."
+#  when: install_manager_path.stat.exists != True
+#- debug: msg="The install manager is installed so this step will be skipped."
+#  when: install_manager_path.stat.exists == True
+#
+#- unarchive:
+#    src: /opt/accuoss/software/Software/Installation_Manager/agent.installer.linux.gtk.x86_64_1.9.1003.20200730_2125.zip
+#    dest: /home/netcool/InstallationManager
+#    remote_src: True
+#  become: yes
+#  become_user: netcool
+#  when: install_manager_path.stat.exists != True
+#
+#- name: Change ownership of files
+#  shell: "chown -R netcool:ncoadmin /home/netcool/InstallationManager"
+#
+#- name: Install IBM Install Manager
+#  shell: "/home/netcool/InstallationManager/userinstc --launcher.ini /home/netcool/InstallationManager/user-silent-install.ini -installationDirectory /home/netcool/IBM -acceptLicense -ShowVerboseProgress"
+#  become: yes
+#  become_user: netcool
+#  when: install_manager_path.stat.exists != True
+############################################################
+
+############################################################
+# Mount Accuoss NFS Share 
+############################################################
+- stat: path=/opt/accuoss/software/Software
+  register: mount_path
+
+- debug: msg="Mount does not exist so it will be created now."
+  when: mount_path.stat.exists != True
+- debug: msg="Mount already exists so this step will be skipped."
+  when: mount_path.stat.exists == True
+
+- name: Mount an NFS volume
+  ansible.posix.mount:
+    src: 10.160.100.11:/volume1/accuoss_nfs
+    path: /opt/accuoss/software
+    opts: rw,sync,hard,intr
+    state: mounted
+    fstype: nfs
+  when: mount_path.stat.exists != True
+
+#mount -t nfs 10.160.100.11:/volume1/accuoss_nfs /opt/accuoss/software
+############################################################
+
+############################################################
+# Copy Impact files to tmp install directory 
+############################################################
+- stat: path=/tmp/impactinstall/Impact7.1.0.20/ImpactRepository
+  register: tmp_path
+
+- debug: msg="Path does not exist so it will be copied now."
+  when: tmp_path.stat.exists != True
+- debug: msg="Path already exists so this step will be skipped."
+  when: tmp_path.stat.exists == True
+
+- name: copy scripts to script directory
+  copy:
+    src: /opt/accuoss/software/Software/NOI/Impact/Impact7.1.0.20 
+    dest: /tmp/impactinstall
+    remote_src: yes 
+    owner: netcool
+    group: ncoadmin
+    mode: 0775
+    directory_mode: yes
+    recurse: yes
+    force: yes
+    when: tmp_path.stat.exists != True
+############################################################
+
+############################################################
+# Unarchive Install files Install 
+############################################################
+- stat: path=/tmp/impactinstall/Impact7.1.0.20/ImpactRepository
+  register: unzip_path
+
+- debug: msg="Unzip path does not exist so it will be unzipped now."
+  when: unzip_path.stat.exists != True
+- debug: msg="Unzip path already exists so this step will be skipped."
+  when: tmp_path.stat.exists == True
+
+- unarchive:
+    src: /tmp/impactinstall/Impact7.1.0.20/CC8HPEN.zip
+    dest: /tmp/impactinstall/Impact7.1.0.20 
+    remote_src: True
+  become: yes
+  become_user: netcool
+  when: unzip_path.stat.exists != True
+
+############################################################
+# Impact Server Silent Install 
+############################################################
+- stat: path=/opt/IBM/tivoli/impact
+  register: impact_path
+
+- debug: msg="Impact is not installed so it will be installed now."
+  when: impact_path.stat.exists != True
+- debug: msg="Impact is installed so this step will be skipped."
+  when: impact_path.stat.exists == True
+
+- name: Install Impact 
+  shell: "/tmp/impactinstall/Impact7.1.0.20/install_silent.sh /tmp/impactinstall/Impact7.1.0.20/segra_silentInstall_response_wo_defs.xml -acceptLicense"
+  become: yes
+  become_user: netcool
+  when: impact_path.stat.exists != True
+############################################################
+#- name: Delete the zip file /opt/IBM/tmp/install/core/OMNIbus-v8.1.0.5-Core.linux64.zip
+#  shell: "rm -f /opt/IBM/tmp/install/core/OMNIbus-v8.1.0.5-Core.linux64.zip"
+#  become: yes
+#  become_user: netcool
+#  when: objsrv_aggp_db_path.stat.exists != True
+#############################################################
+
+##################################################################
+# Run Script to make hosts file
+##################################################################
+#- name: Create /etc/hosts file
+#  shell: "cd /opt/accuoss/omnibus/configs/objectserver && ./make_host_file.sh"
+#  become: true
+##################################################################

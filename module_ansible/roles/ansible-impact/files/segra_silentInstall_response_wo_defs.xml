@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- *************************************************** {COPYRIGHT-TOP-RM} ***
+* Licensed Materials - Property of IBM
+* "Restricted Materials of IBM"
+* 5724-S43
+*
+* (C) Copyright IBM Corporation 2014, 2019. All Rights Reserved.
+*
+* US Government Users Restricted Rights - Use, duplication, or
+* disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+******************************************************** {COPYRIGHT-END-RM} -->
+<agent-input clean='true' temporary='true'>
+    <variables>
+        <variable name='sharedLocation' value='/home/netcool/IBM/IBMIMShared'/>
+    </variables>
+    <preference name='com.ibm.cic.common.core.preferences.eclipseCache' value='${sharedLocation}'/>
+   <server>
+      <repository location='/tmp/test/Impact7.1.0.20/ImpactRepository/disk1/diskTag.inf'/>
+      <repository location='/tmp/test/Impact7.1.0.20/ImpactExtRepository/disk1/diskTag.inf'/>
+   </server>
+   <preference name='offering.service.repositories.areUsed' value='false'/>
+   <install modify='false'>
+      <offering id='com.ibm.tivoli.impact.gui_server' profile='IBM Tivoli Netcool Impact' features='main.gui_feature' installFixes='none'/>
+      <offering id='com.ibm.tivoli.impact.server' profile='IBM Tivoli Netcool Impact' features='main.server_feature' installFixes='none'/>
+      <offering id='com.ibm.tivoli.impact.server_extensions' profile='IBM Tivoli Netcool Impact' features='main.server_extensions_feature' installFixes='none'/>
+   </install>
+   <profile id='IBM Tivoli Netcool Impact' installLocation='/opt/IBM/tivoli/impact'>
+      <data key='user.userRegistry' value='ObjectServer'/>
+      <data key='user.objectServerHost' value='segra-objectserver'/>
+      <data key='user.objectServerPort' value='4100'/>
+      <data key='user.objectServerBackupHost' value=''/>
+      <data key='user.objectServerBackupPort' value=''/>
+      <data key='user.objectServerUser' value='netcool'/>
+      <data key='user.objectServerPassword' value='n3tc00l'/>
+      <data key='user.objectServerConfirmPassword' value=''/>
+      <data key='user.libertyUser' value='impactadmin'/>
+      <data key='user.libertyPassword' value='impactadmin'/>
+      <data key='user.libertyConfirmPassword' value='impactadmin'/>
+      <data key='user.liberty.httpPort' value='9080'/>
+      <data key='user.liberty.rmiPort' value='30000'/>
+      <data key='user.liberty.rmiStartPort' value='30001'/>
+      <data key='user.liberty.rmiStopPort' value='30101'/>
+      <data key='user.liberty.guiHttpPort' value='16310'/>
+      <data key='user.activeMQBrokerPort' value='16399'/>
+      <data key='user.nameServerPrimaryHost' value='segra-impact.dfw.accuoss.com'/>
+      <data key='user.nameServerPrimaryPort' value='9080'/>
+      <data key='user.nameServerSecondaryHost' value=''/>
+      <data key='user.nameServerSecondaryPort' value=''/>
+      <data key='user.localHostName' value='segra-impact.dfw.accuoss.com'/>
+      <data key='user.nciServerInstanceName,com.ibm.tivoli.impact.server' value='NCI'/>
+      <data key='user.nciClusterName,com.ibm.tivoli.impact.server' value='NCICLUSTER'/>
+      <data key='user.nciPortNumber,com.ibm.tivoli.impact.server' value='2000'/>
+      <data key='user.derbyType,com.ibm.tivoli.impact.server' value='PrimaryStandalone'/>
+      <data key='user.derbyPrimaryHost,com.ibm.tivoli.impact.server' value='localhost'/>
+      <data key='user.derbyPrimaryPort,com.ibm.tivoli.impact.server' value='1527'/>
+      <data key='user.derbyBackupHost,com.ibm.tivoli.impact.server' value='localhost'/>
+      <data key='user.derbyBackupPort,com.ibm.tivoli.impact.server' value='1527'/>
+      <data key='user.derbyReplicationPort,com.ibm.tivoli.impact.server' value='4851'/>
+      <data key='user.silentInstall' value='true'/>
+   </profile>
+</agent-input>
